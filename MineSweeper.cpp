@@ -2,7 +2,7 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
-
+//hogehoge
 using namespace std;
 
 const int SIZE = 10;
