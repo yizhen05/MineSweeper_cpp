@@ -5,37 +5,39 @@
 
 using namespace std;
 
-const int SIZE = 10;
-const int MINENUM = 10;
-int life = 3;
+// ボードのサイズと爆弾の数
+const unsigned int SIZE = 10;
+const unsigned int MINENUM = 10;
+// ライフ
+unsigned int life = 3;
 
-vector<vector<char>> board(SIZE, vector<char>(SIZE));
-vector<vector<char>> showboard(SIZE, vector<char>(SIZE));
+// 判定用と表示用のボード
+vector<vector<int>> judgement_board(SIZE, vector<int>(SIZE));
+vector<vector<char>> visualized_board(SIZE, vector<char>(SIZE));
 
+// ボードの初期化
 void initialize() {
-    // Initialize board
-    // 全部ハイフンをいれる
     for (int x = 0; x < SIZE; x++) {
         for (int y = 0; y < SIZE; y++) {
-            board[x][y] = '-';
-            showboard[x][y] = '-';
+            judgement_board[x][y] = '1';
+            visualized_board[x][y] = '-';
         }
     }
-    // 爆弾の配置
+    // 爆弾を配置
     srand(time(NULL));
     int minesPlaced = 0;
     while (minesPlaced < MINENUM) {
         int x = rand() % SIZE;
         int y = rand() % SIZE;
-        if (board[x][y] != '*') {
-            board[x][y] = '*';
+        if (judgement_board[x][y] != -1) {
+            judgement_board[x][y] = -1;
             minesPlaced++;
         }
     }
 }
 
+// ボードの表示
 void displayBoard() {
-    // Display board
     cout << "  ";
     for (int x = 0; x < SIZE; x++) {
         cout << x << " ";
@@ -45,32 +47,36 @@ void displayBoard() {
         cout << y << " ";
         for (int x = 0; x < SIZE; x++) {
             // cout << board[x][y] << " ";
-            cout << showboard[x][y] << " ";
+            cout << visualized_board[x][y] << " ";
         }
         cout << endl;
     }
 }
+// ボードの範囲内かどうかを判定
+bool isInBoard(int x, int y) {
+    return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
+}
 
-bool inBoard(int x, int y) { return x >= 0 && x < SIZE && y >= 0 && y < SIZE; }
-
+// 指定した座標の周囲の爆弾の数をカウント
 int countMines(int x, int y) {
     int count = 0;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             // if (x + 1 >= 0 && x + 1 <= SIZE && y + 1 >= 0 && y + 1 <= SIZE) {
-            if (inBoard(x + i, y + j)) {
-                if (board[x + i][y + j] == '*') count++;
+            if (isInBoard(x + i, y + j)) {
+                if (judgement_board[x + i][y + j] == -1) count++;
             }
         }
     }
     return count;
 }
 
+// セルセルを開く
 void open(int x, int y) {
-    if (showboard[x][y] != '-') return;
+    if (visualized_board[x][y] != '-') return;
 
-    if (board[x][y] == '*') {
-        showboard[x][y] = '*';
+    if (judgement_board[x][y] == '*') {
+        visualized_board[x][y] = '*';
         life--;
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
         return;
@@ -78,10 +84,10 @@ void open(int x, int y) {
     int mineNum = countMines(x, y);
     if (mineNum > 0) {
         // board[x][y]='0'+mines;
-        showboard[x][y] = '0' + mineNum;
+        visualized_board[x][y] = '0' + mineNum;
     } else {
         // board[x][y] = ' ';
-        showboard[x][y] = ' ';
+        visualized_board[x][y] = ' ';
 
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
@@ -90,14 +96,26 @@ void open(int x, int y) {
         }
     }
 }
+
+// 旗を立てるかセルを開くかを選択
 void flagOrOpen(int x, int y) {
-    int flag;
-    cout << "1:Flag 2:Open>>";
-    cin >> flag;
-    if (flag == 1) {
-        showboard[x][y] = 'F';
-    } else if (flag == 2) {
+    int choice;
+    do {
+        cout << "1. Open 2. Flag >>";
+        cin >> choice;
+        if (choice != 1 && choice != 2) {
+            cout << "Error enter a valid value!" << endl;
+        }
+
+    } while (choice != 1 && choice != 2);
+    if (choice == 1) {
         open(x, y);
+    } else {
+        if (visualized_board[x][y] == '-') {
+            visualized_board[x][y] = 'F';
+        } else if (visualized_board[x][y] == 'F') {
+            visualized_board[x][y] = '-';
+        }
     }
 }
 
@@ -109,10 +127,10 @@ int main(void) {
         do {
             cout << "Enter x,y>>";
             cin >> x >> y;
-            if (!inBoard(x, y)) {
+            if (!isInBoard(x, y)) {
                 cout << "Error enter a valid value";
             }
-        } while (!inBoard(x, y));
+        } while (!isInBoard(x, y));
         flagOrOpen(x, y);
         displayBoard();
     }
