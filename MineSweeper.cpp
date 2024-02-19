@@ -64,18 +64,21 @@ int countMines(int x, int y) {
         for (int j = -1; j <= 1; j++) {
             // if (x + 1 >= 0 && x + 1 <= SIZE && y + 1 >= 0 && y + 1 <= SIZE) {
             if (isInBoard(x + i, y + j)) {
-                if (judgement_board[x + i][y + j] == -1) count++;
+                if (judgement_board[x + i][y + j] == -1) {
+                    count++;
+                }
             }
         }
     }
     return count;
 }
 
-// セルセルを開く
-void open(int x, int y) {
-    if (visualized_board[x][y] != '-') return;
-
-    if (judgement_board[x][y] == '*') {
+// セルを開く
+void openCell(int x, int y) {
+    if (visualized_board[x][y] != '-') {
+        return;
+    }
+    if (judgement_board[x][y] == -1) {
         visualized_board[x][y] = '*';
         life--;
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
@@ -83,34 +86,21 @@ void open(int x, int y) {
     }
     int mineNum = countMines(x, y);
     if (mineNum > 0) {
-        // board[x][y]='0'+mines;
         visualized_board[x][y] = '0' + mineNum;
     } else {
-        // board[x][y] = ' ';
         visualized_board[x][y] = ' ';
-
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                open(x + i, y + j);
-            }
-        }
     }
 }
 
-// 旗を立てるかセルを開くかを選択
-void flagOrOpen(int x, int y) {
-    int choice;
-    do {
-        cout << "1. Open 2. Flag >>";
-        cin >> choice;
-        if (choice != 1 && choice != 2) {
-            cout << "Error enter a valid value!" << endl;
-        }
-
-    } while (choice != 1 && choice != 2);
+// 旗を立てるかセルを開くかする
+void flagOrOpen(int x, int y, int choice) {
+    if (!(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F')) {
+        cout << "Error! You cannot open or put a flag here!" << endl;
+        return;
+    }
     if (choice == 1) {
-        open(x, y);
-    } else {
+        openCell(x, y);
+    } else if (choice == 2) {
         if (visualized_board[x][y] == '-') {
             visualized_board[x][y] = 'F';
         } else if (visualized_board[x][y] == 'F') {
@@ -122,16 +112,18 @@ void flagOrOpen(int x, int y) {
 int main(void) {
     initialize();
     displayBoard();
-    int x, y;
+    int x, y, choice;
     while (life > 0) {
         do {
-            cout << "Enter x,y>>";
-            cin >> x >> y;
-            if (!isInBoard(x, y)) {
-                cout << "Error enter a valid value";
+            cout << "1. Open 2. Flag" << endl;
+            cout << "Enter x y Open/Flag >>";
+            cin >> x >> y >> choice;
+            if (!isInBoard(x, y) || (choice != 1 && choice != 2)) {
+                cout << "Error! Enter a valid value!" << endl;
             }
         } while (!isInBoard(x, y));
-        flagOrOpen(x, y);
+
+        flagOrOpen(x, y, choice);
         displayBoard();
     }
     return 0;
