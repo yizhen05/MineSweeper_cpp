@@ -43,11 +43,10 @@ void initialize() {
     while (mines_placed < MINES) {
         int y = rand() % SIZE;
         int x = rand() % SIZE;
-        int n = rand() % 8;
         // if ((judgement_board[x] & (0x80 >> n)) == 0) {
-        if (!(judgement_board[x] & (0x80 >> n))) {
-            judgement_board[x] |= (0x80 >> n);
-            minesPlaced++;
+        if (isMine(x, y)) {
+            judgement_board[y] |= (0x80 >> x);
+            mines_placed++;
         }
     }
 }
@@ -69,11 +68,6 @@ void displayBoard() {
     }
 }
 
-// ボードの範囲内かどうかを判定
-bool isInBoard(int x, int y) {
-    return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
-}
-
 // 指定した座標の周囲の爆弾の数をカウント
 int countMines(int x, int y) {
     int count = 0;
@@ -92,7 +86,7 @@ int countMines(int x, int y) {
 
 // セルを開く
 void openCell(int x, int y) {
-    if (!(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F')) {
+    if (isFlagOrOpen(x, y)) {
         return;
     }
     if (isMine(x, y)) {
@@ -111,7 +105,7 @@ void openCell(int x, int y) {
 
 // 旗を立てるかセルを開くかする
 void flagOrOpen(int x, int y, int choice) {
-    if (!(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F')) {
+    if (isFlagOrOpen(x, y)) {
         cout << "Error! You cannot open or put a flag here!" << endl;
         return;
     }
