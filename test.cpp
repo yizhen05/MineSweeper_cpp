@@ -1,8 +1,20 @@
 #include <bits/stdc++.h>
+
 using namespace std;
+
+class hoge {
+    int a;
+    int b;
+    hoge(int a, int b) {
+        this->a = a;
+        this->b = b;
+    }
+};
 int main() {
-    int a = 8;
-    char b = a + '0';
-    cout << b << endl;
+    for (int i = 0; i < 10; i++) {
+        cout << "Hello World!" << endl;
+    }
+    hoge hoge(1, 2);
+    hoge.a;
     return 0;
 }

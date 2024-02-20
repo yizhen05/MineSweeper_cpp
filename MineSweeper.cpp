@@ -1,7 +1,8 @@
+#include <time.h>
+
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <time.h>
 #include <vector>
 
 using namespace std;
@@ -19,11 +20,9 @@ vector<vector<char>> visualized_board(SIZE, vector<char>(SIZE));
 
 // ボードの初期化
 void initialize() {
-    // 計測開始
-    // clock_t start = clock();
     for (int x = 0; x < SIZE; x++) {
         for (int y = 0; y < SIZE; y++) {
-            judgement_board[x] = 0b00000000;
+            judgement_board[y] = 0b00000000;
             visualized_board[x][y] = '-';
         }
     }
@@ -32,17 +31,13 @@ void initialize() {
     int minesPlaced = 0;
     while (minesPlaced < MINENUM) {
         int x = rand() % SIZE;
-        int n = rand() % 8;
+        int y = rand() % SIZE;
         // if ((judgement_board[x] & (0x80 >> n)) == 0) {
-        if (!(judgement_board[x] & (0x80 >> n))) {
-            judgement_board[x] |= (0x80 >> n);
+        if (!(judgement_board[y] & (0x80 >> x))) {
+            judgement_board[y] |= (0x80 >> x);
             minesPlaced++;
         }
     }
-    // 計測終了
-    // clock_t end = clock();
-    // cout << "Time: " << (double)(end - start) / CLOCKS_PER_SEC << "s" <<
-    // endl;
 }
 
 // ボードの表示
@@ -67,6 +62,12 @@ bool isInBoard(int x, int y) {
     return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
 }
 
+bool isMine(int x, int y) { return judgement_board[y] & (0x80 >> x); }
+
+bool isFlagorOpen(int x, int y) {
+    return !(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F');
+}
+
 // 指定した座標の周囲の爆弾の数をカウント
 int countMines(int x, int y) {
     int count = 0;
@@ -74,7 +75,7 @@ int countMines(int x, int y) {
         for (int j = -1; j <= 1; j++) {
             // if (x + 1 >= 0 && x + 1 <= SIZE && y + 1 >= 0 && y + 1 <= SIZE) {
             if (isInBoard(x + i, y + j)) {
-                if (judgement_board[x + i] & (0x80 >> (y + j))) {
+                if (isMine(x + i, y + j)) {
                     count++;
                 }
             }
@@ -85,10 +86,10 @@ int countMines(int x, int y) {
 
 // セルを開く
 void openCell(int x, int y) {
-    if (!(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F')) {
+    if (isFlagorOpen(x, y)) {
         return;
     }
-    if (judgement_board[x] & (0x80 >> y)) {
+    if (isMine(x, y)) {
         visualized_board[x][y] = '*';
         life--;
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
@@ -104,7 +105,7 @@ void openCell(int x, int y) {
 
 // 旗を立てるかセルを開くかする
 void flagOrOpen(int x, int y, int choice) {
-    if (!(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F')) {
+    if (isFlagorOpen(x, y)) {
         cout << "Error! You cannot open or put a flag here!" << endl;
         return;
     }
@@ -122,19 +123,19 @@ void flagOrOpen(int x, int y, int choice) {
 int main(void) {
     initialize();
     displayBoard();
-    // int x, y, choice;
-    // while (life > 0) {
-    //     do {
-    //         cout << "1. Open 2. Flag" << endl;
-    //         cout << "Enter x y Open/Flag >>";
-    //         cin >> x >> y >> choice;
-    //         if (!isInBoard(x, y) || (choice != 1 && choice != 2)) {
-    //             cout << "Error! Enter a valid value!" << endl;
-    //         }
-    //     } while (!isInBoard(x, y));
+    int x, y, choice;
+    while (life > 0) {
+        do {
+            cout << "1. Open 2. Flag" << endl;
+            cout << "Enter x y Open/Flag >>";
+            cin >> x >> y >> choice;
+            if (!isInBoard(x, y) || (choice != 1 && choice != 2)) {
+                cout << "Error! Enter a valid value!" << endl;
+            }
+        } while (!isInBoard(x, y));
 
-    //     flagOrOpen(x, y, choice);
-    //     displayBoard();
-    // }
+        flagOrOpen(x, y, choice);
+        displayBoard();
+    }
     return 0;
 }
