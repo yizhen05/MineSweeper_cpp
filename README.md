@@ -1,0 +1,1 @@
+MineSweeper.cppをコンパイルして実行してください．
