@@ -14,9 +14,8 @@ const unsigned int MINES = 10;
 unsigned int life = 3;
 
 // 判定用と表示用のボード
-// vector<vector<int>> judgement_board(SIZE, vector<int>(SIZE));
 unsigned char judgement_board[SIZE];
-vector<vector<char>> visualized_board(SIZE, vector<char>(SIZE));
+vector<vector<char>> display_board(SIZE, vector<char>(SIZE));
 
 // ボードの範囲内かどうかを判定
 bool isInBoard(int x, int y) {
@@ -24,7 +23,7 @@ bool isInBoard(int x, int y) {
 }
 // セルが開かれているか旗が立っているかを判定
 bool isFlagOrOpen(int x, int y) {
-    return !(visualized_board[x][y] == '-') && !(visualized_board[x][y] == 'F');
+    return !(display_board[x][y] == '-') && !(display_board[x][y] == 'F');
 }
 // 指定した座標に爆弾があるかどうかを判定
 bool isMine(int x, int y) { return (judgement_board[y] & (0x80 >> x)) == 0; }
@@ -34,7 +33,7 @@ void initialize() {
     for (int x = 0; x < SIZE; x++) {
         for (int y = 0; y < SIZE; y++) {
             judgement_board[y] = 0b00000000;
-            visualized_board[x][y] = '-';
+            display_board[x][y] = '-';
         }
     }
     // 爆弾を配置
@@ -43,7 +42,6 @@ void initialize() {
     while (mines_placed < MINES) {
         int y = rand() % SIZE;
         int x = rand() % SIZE;
-        // if ((judgement_board[x] & (0x80 >> n)) == 0) {
         if (isMine(x, y)) {
             judgement_board[y] |= (0x80 >> x);
             mines_placed++;
@@ -61,8 +59,7 @@ void displayBoard() {
     for (int y = 0; y < SIZE; y++) {
         cout << y << " ";
         for (int x = 0; x < SIZE; x++) {
-            // cout << board[x][y] << " ";
-            cout << visualized_board[x][y] << " ";
+            cout << display_board[x][y] << " ";
         }
         cout << endl;
     }
@@ -73,7 +70,6 @@ int countMines(int x, int y) {
     int count = 0;
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
-            // if (x + 1 >= 0 && x + 1 <= SIZE && y + 1 >= 0 && y + 1 <= SIZE) {
             if (isInBoard(x + i, y + j)) {
                 if (isMine(x + i, y + j)) {
                     count++;
@@ -90,16 +86,16 @@ void openCell(int x, int y) {
         return;
     }
     if (isMine(x, y)) {
-        visualized_board[x][y] = '*';
+        display_board[x][y] = '*';
         life--;
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
         return;
     }
-    int MINES = countMines(x, y);
-    if (MINES > 0) {
-        visualized_board[x][y] = '0' + MINES;
+    int mine_num = countMines(x, y);
+    if (mine_num > 0) {
+        display_board[x][y] = '0' + mine_num;
     } else {
-        visualized_board[x][y] = ' ';
+        display_board[x][y] = ' ';
     }
 }
 
@@ -112,10 +108,10 @@ void flagOrOpen(int x, int y, int choice) {
     if (choice == 1) {
         openCell(x, y);
     } else if (choice == 2) {
-        if (visualized_board[x][y] == '-') {
-            visualized_board[x][y] = 'F';
-        } else if (visualized_board[x][y] == 'F') {
-            visualized_board[x][y] = '-';
+        if (display_board[x][y] == '-') {
+            display_board[x][y] = 'F';
+        } else if (display_board[x][y] == 'F') {
+            display_board[x][y] = '-';
         }
     }
 }
