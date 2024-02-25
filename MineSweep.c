@@ -113,7 +113,7 @@ int main(void) {
     while (life > 0) {
         do {
             puts("1. Open cell 2. Put a flag");
-            printf("Enter x y Opne/Flag: ");
+            printf("Enter x y Open/Flag: ");
             scanf("%d %d %d", &x, &y, &choice);
             if (!isInBoard(x, y)) {
                 printf("Error: Out of board\n");
