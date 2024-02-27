@@ -7,6 +7,8 @@
 
 using namespace std;
 
+bool debug = false;
+
 // ボードのサイズと爆弾の数
 const unsigned int SIZE = 8;
 const unsigned int MINES = 10;
@@ -26,13 +28,13 @@ bool isFlagOrOpen(int x, int y) {
     return !(display_board[x][y] == '-') && !(display_board[x][y] == 'F');
 }
 // 指定した座標に爆弾があるかどうかを判定
-bool isMine(int x, int y) { return (judgement_board[y] & (0x80 >> x)) == 0; }
+bool isMine(int x, int y) { return (judgement_board[y] & (0x80 >> x)); }
 
 // ボードの初期化
-void initialize() {
-    for (int x = 0; x < SIZE; x++) {
-        for (int y = 0; y < SIZE; y++) {
-            judgement_board[y] = 0b00000000;
+void initialize(int x, int y, bool debug) {
+    for (int y = 0; y < SIZE; y++) {     // y座標のループ
+        judgement_board[y] = 0b00000000; // y座標ごとに初期化
+        for (int x = 0; x < SIZE; x++) { // x座標のループ
             display_board[x][y] = '-';
         }
     }
@@ -42,15 +44,32 @@ void initialize() {
     while (mines_placed < MINES) {
         int y = rand() % SIZE;
         int x = rand() % SIZE;
-        if (isMine(x, y)) {
+        if (!(isMine(x, y))) {
             judgement_board[y] |= (0x80 >> x);
             mines_placed++;
         }
     }
+
+    // if (debug) { // デバッグモードの場合は爆弾の位置を表示
+    //     cout << "Mines Location" << endl;
+    //     cout << "  ";
+    //     for (int x = 0; x < SIZE; x++) {
+    //         cout << x << " ";
+    //     }
+    //     cout << endl;
+    //     for (int y = 0; y < SIZE; y++) {
+    //         cout << y << " ";
+    //         for (int x = 0; x < SIZE; x++) {
+    //             cout << ((judgement_board[y] & (0x80 >> x)) ? '*' : '-') << "
+    //             ";
+    //         }
+    //         cout << endl;
+    //     }
+    // }
 }
 
 // ボードの表示
-void displayBoard() {
+void displayBoard(bool debug) {
     cout << "  ";
     for (int x = 0; x < SIZE; x++) {
         cout << x << " ";
@@ -62,6 +81,22 @@ void displayBoard() {
             cout << display_board[x][y] << " ";
         }
         cout << endl;
+    }
+
+    if (debug) { // judegement_boardの表示
+        cout << endl << "Judgement Board" << endl;
+        cout << "  ";
+        for (int x = 0; x < SIZE; x++) {
+            cout << x << " ";
+        }
+        cout << endl;
+        for (int y = 0; y < SIZE; y++) {
+            cout << y << " ";
+            for (int x = 0; x < SIZE; x++) {
+                cout << ((judgement_board[y] & (0x80 >> x)) ? '*' : '-') << " ";
+            }
+            cout << endl;
+        }
     }
 }
 
@@ -80,6 +115,8 @@ int countMines(int x, int y) {
     return count;
 }
 
+void autoOpneCell(int x, int y);
+
 // セルを開く
 void openCell(int x, int y) {
     if (isFlagOrOpen(x, y)) {
@@ -91,11 +128,44 @@ void openCell(int x, int y) {
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
         return;
     }
-    int mine_num = countMines(x, y);
-    if (mine_num > 0) {
-        display_board[x][y] = '0' + mine_num;
+    if (countMines(x, y) == 0) {
+        autoOpneCell(x, y);
     } else {
-        display_board[x][y] = ' ';
+        int mine_num = countMines(x, y);
+        display_board[x][y] = '0' + mine_num;
+    }
+}
+
+// 131行目からの処理を関数化
+void autoOpneCell(int x, int y) {
+    while (true) {
+        bool is_opened = false;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (isInBoard(x + i, y + j)) {
+                    if (display_board[x + i][y + j] == '-') {
+                        int mine_num = countMines(x + i, y + j);
+                        if (mine_num == 0) {
+                            display_board[x + i][y + j] = ' ';
+                        } else {
+                            display_board[x + i][y + j] = '0' + mine_num;
+                        }
+                        if (mine_num == 0) {
+                            x = x + i;
+                            y = y + j;
+                            is_opened = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (is_opened) {
+                break;
+            }
+        }
+        if (!is_opened) {
+            break;
+        }
     }
 }
 
@@ -117,9 +187,10 @@ void flagOrOpen(int x, int y, int choice) {
 }
 
 int main(void) {
-    initialize();
-    displayBoard();
     int x, y, choice;
+    initialize(x, y, debug);
+    displayBoard(debug);
+
     while (life > 0) {
         do {
             cout << "1. Open 2. Flag" << endl;
@@ -131,7 +202,12 @@ int main(void) {
         } while (!isInBoard(x, y));
 
         flagOrOpen(x, y, choice);
-        displayBoard();
+        displayBoard(debug);
+    }
+    if (life == 0) {
+        cout << "\033[31m Game Over!! \033[33" << endl;
+        // cout << "Do you want to play again? (yes:1, no:0) >>";
+        // cin >> choice;
     }
     return 0;
 }
