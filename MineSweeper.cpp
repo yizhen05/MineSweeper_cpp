@@ -122,7 +122,6 @@ void openCell(int x, int y) {
     }
 }
 
-// 131行目からの処理を関数化
 void autoOpneCell(int x, int y) {
     while (true) {
         bool is_opened = false;
