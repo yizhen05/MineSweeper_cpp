@@ -21,14 +21,17 @@ vector<vector<char>> display_board(SIZE, vector<char>(SIZE));
 
 // ボードの範囲内かどうかを判定
 bool isInBoard(int x, int y) {
-    return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
+    return x > 0 && x <= SIZE && y > 0 && y <= SIZE;
 }
 // セルが開かれているか旗が立っているかを判定
 bool isFlagOrOpen(int x, int y) {
-    return !(display_board[x][y] == '-') && !(display_board[x][y] == 'F');
+    return !((display_board[x - 1][y - 1] == '-') ||
+             (display_board[x - 1][y - 1] == 'F'));
 }
 // 指定した座標に爆弾があるかどうかを判定
-bool isMine(int x, int y) { return (judgement_board[y] & (0x80 >> x)); }
+bool isMine(int x, int y) {
+    return (judgement_board[y - 1] & (0x80 >> (x - 1)));
+}
 
 // ボードの初期化
 void initialize(int x, int y, bool debug) {
@@ -49,34 +52,17 @@ void initialize(int x, int y, bool debug) {
             mines_placed++;
         }
     }
-
-    // if (debug) { // デバッグモードの場合は爆弾の位置を表示
-    //     cout << "Mines Location" << endl;
-    //     cout << "  ";
-    //     for (int x = 0; x < SIZE; x++) {
-    //         cout << x << " ";
-    //     }
-    //     cout << endl;
-    //     for (int y = 0; y < SIZE; y++) {
-    //         cout << y << " ";
-    //         for (int x = 0; x < SIZE; x++) {
-    //             cout << ((judgement_board[y] & (0x80 >> x)) ? '*' : '-') << "
-    //             ";
-    //         }
-    //         cout << endl;
-    //     }
-    // }
 }
 
 // ボードの表示
 void displayBoard(bool debug) {
     cout << "  ";
     for (int x = 0; x < SIZE; x++) {
-        cout << x << " ";
+        cout << x + 1 << " ";
     }
     cout << endl;
     for (int y = 0; y < SIZE; y++) {
-        cout << y << " ";
+        cout << y + 1 << " ";
         for (int x = 0; x < SIZE; x++) {
             cout << display_board[x][y] << " ";
         }
@@ -119,20 +105,20 @@ void autoOpneCell(int x, int y);
 
 // セルを開く
 void openCell(int x, int y) {
-    if (isFlagOrOpen(x, y)) {
+    if (isFlagOrOpen(x - 1, y - 1)) {
         return;
     }
-    if (isMine(x, y)) {
-        display_board[x][y] = '*';
+    if (isMine(x - 1, y - 1)) {
+        display_board[x - 1][y - 1] = '*';
         life--;
         cout << "\033[31m BOOM!! \033[m Your life is " << life << endl;
         return;
     }
-    if (countMines(x, y) == 0) {
-        autoOpneCell(x, y);
+    if (countMines(x - 1, y - 1) == 0) {
+        autoOpneCell(x - 1, y - 1);
     } else {
-        int mine_num = countMines(x, y);
-        display_board[x][y] = '0' + mine_num;
+        int mine_num = countMines(x - 1, y - 1);
+        display_board[x - 1][y - 1] = '0' + mine_num;
     }
 }
 
@@ -143,7 +129,7 @@ void autoOpneCell(int x, int y) {
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (isInBoard(x + i, y + j)) {
-                    if (display_board[x + i][y + j] == '-') {
+                    if (isFlagOrOpen(x + i, y + j)) {
                         int mine_num = countMines(x + i, y + j);
                         if (mine_num == 0) {
                             display_board[x + i][y + j] = ' ';
@@ -153,7 +139,7 @@ void autoOpneCell(int x, int y) {
                         if (mine_num == 0) {
                             x = x + i;
                             y = y + j;
-                            is_opened = true;
+                            // is_opened = true;
                             break;
                         }
                     }
